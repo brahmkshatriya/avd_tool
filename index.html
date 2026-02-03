@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AVD Previewer & Exporter</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/dialog/dialog.min.css">
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+
+  <main class="workspace">
+    <section class="editor-panel">
+      <header class="title-bar" role="banner">
+        <button class="titlebar-icon-btn" id="btn-github" type="button" aria-label="Open GitHub profile">
+          <span class="material-symbols-rounded" aria-hidden="true">award_meal</span>
+        </button>
+        <div class="menu-section" data-menu="file">
+          <button class="menu-title" type="button" aria-haspopup="true" aria-expanded="false">File</button>
+          <div class="menu-content" role="menu">
+            <button class="menu-item" type="button" id="btn-open-xml" role="menuitem">
+              <span>Open XML...</span>
+              <span class="menu-shortcut">Ctrl+O</span>
+            </button>
+            <input class="menu-hidden-input" type="file" id="avd-file" accept=".xml">
+            <button class="menu-item" type="button" id="btn-save-xml" role="menuitem">
+              <span>Save</span>
+              <span class="menu-shortcut">Ctrl+S</span>
+            </button>
+          </div>
+        </div>
+        <div class="menu-section" data-menu="code">
+          <button class="menu-title" type="button" aria-haspopup="true" aria-expanded="false">Code</button>
+          <div class="menu-content" role="menu">
+            <button class="menu-item" type="button" id="btn-format-xml" role="menuitem">
+              <span>Format XML</span>
+              <span class="menu-shortcut">Shift+Alt+F</span>
+            </button>
+            <button class="menu-item" type="button" id="btn-search" role="menuitem">
+              <span>Find</span>
+              <span class="menu-shortcut">Ctrl+F</span>
+            </button>
+            <button class="menu-item" type="button" id="btn-replace" role="menuitem">
+              <span>Replace</span>
+              <span class="menu-shortcut">Ctrl+H</span>
+            </button>
+            <div class="menu-separator" role="separator"></div>
+            <div class="menu-status" role="menuitem" aria-disabled="true">
+              <span id="lint-status">No XML loaded</span>
+            </div>
+          </div>
+        </div>
+        <div class="menu-section" data-menu="export">
+          <button class="menu-title" type="button" aria-haspopup="true" aria-expanded="false">Export</button>
+          <div class="menu-content" role="menu">
+            <button class="menu-item" type="button" id="btn-export" role="menuitem">
+              <span>Export Frames (PNG)</span>
+              <span class="menu-shortcut">Ctrl+Shift+E</span>
+            </button>
+            <button class="menu-item" type="button" id="btn-export-mp4" role="menuitem">
+              <span>Export Video (MP4)</span>
+              <span class="menu-shortcut">Ctrl+Shift+V</span>
+            </button>
+            <div class="menu-separator" role="separator"></div>
+            <div class="menu-status" id="export-status" role="menuitem" aria-disabled="true"></div>
+          </div>
+        </div>
+      </header>
+      <textarea id="xml-editor" class="code-editor"></textarea>
+    </section>
+
+    <div id="panel-resizer" class="panel-resizer" aria-label="Resize panels"></div>
+
+    <section class="preview-panel">
+      <div class="preview-area">
+        <div id="preview-viewport" class="preview-viewport">
+          <canvas id="preview-canvas" width="400" height="400"></canvas>
+        </div>
+        <div class="preview-top-controls">
+          <button class="preview-top-toggle" id="btn-toggle-top-panel" type="button" aria-label="Hide controls">
+            <span class="material-symbols-rounded" aria-hidden="true">expand_less</span>
+          </button>
+          <div class="preview-inputs">
+            <label class="inline-label" for="scale">Scale</label>
+            <input type="number" id="scale" value="1.0" min="0.1" step="0.1" max="10.0">
+            <label class="inline-label" for="fps">FPS</label>
+            <input type="number" id="fps" value="60" min="1" max="120">
+          </div>
+          <div class="zoom-controls">
+            <button id="btn-zoom-out" aria-label="Zoom out">-</button>
+            <span id="zoom-level">100%</span>
+            <button id="btn-zoom-in" aria-label="Zoom in">+</button>
+            <button id="btn-zoom-reset">Reset</button>
+          </div>
+        </div>
+        <button class="preview-top-handle" id="btn-show-top-panel" type="button" aria-label="Show controls">
+          <span class="material-symbols-rounded" aria-hidden="true">expand_more</span>
+        </button>
+      </div>
+      <div class="player-controls">
+        <div class="transport-controls">
+          <button class="speed-toggle" id="speed-toggle" type="button" aria-label="Toggle playback speed">
+            <span class="material-symbols-rounded" aria-hidden="true">1x_mobiledata</span>
+          </button>
+          <button id="btn-step-back" aria-label="Step back">
+            <span class="material-symbols-rounded" aria-hidden="true">skip_previous</span>
+          </button>
+          <button id="btn-play-pause" aria-label="Play">
+            <span class="material-symbols-rounded" aria-hidden="true">play_arrow</span>
+          </button>
+          <button id="btn-step-forward" aria-label="Step forward">
+            <span class="material-symbols-rounded" aria-hidden="true">skip_next</span>
+          </button>
+          <button id="btn-repeat" aria-pressed="true" aria-label="Repeat on">
+            <span class="material-symbols-rounded" aria-hidden="true">repeat_on</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="seekbar">
+        <input type="range" id="timeline" min="0" max="1" step="0.001" value="0">
+        <span id="time-display">0ms / 0ms</span>
+      </div>
+    </section>
+  </main>
+
+  <!-- JSZip for zipping exported frames -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/dialog/dialog.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/search/searchcursor.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/search/search.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/xml/xml.min.js"></script>
+  <script type="module" src="main.js"></script>
+</body>
+
+</html>
